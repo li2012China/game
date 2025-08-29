@@ -38,7 +38,7 @@
     .g-recaptcha {
       margin-bottom: 20px;
     }
-    input[type="submit"] {
+    input[type="submit"], input[type="button"] {
       background-color: #4285f4;
       color: white;
       border: none;
@@ -48,10 +48,10 @@
       cursor: pointer;
       transition: background-color 0.3s ease;
     }
-    input[type="submit"]:hover {
+    input[type="submit"]:hover, input[type="button"]:hover {
       background-color: #3367d6;
     }
-    input[type="submit"]:active {
+    input[type="submit"]:active, input[type="button"]:active {
       transform: scale(0.98);
     }
     @keyframes fadeIn {
@@ -66,51 +66,8 @@
     }
   </style>
   <script>
-    // 检测是否在无痕模式
-    function isIncognito() {
-      // 尝试使用localStorage检测
-      try {
-        const test = 'test';
-        localStorage.setItem(test, test);
-        localStorage.removeItem(test);
-        return false; // 不是无痕模式
-      } catch (e) {
-        return e instanceof DOMException &&
-          (e.code === 22 || e.code === 1014 || e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') &&
-          localStorage.length === 0;
-      }
-    }
-
-    // 检测是否在无痕模式（备用方法）
-    function isIncognitoFallback() {
-      // 尝试使用IndexedDB检测
-      return new Promise((resolve) => {
-        const request = indexedDB.open('test');
-        request.onerror = () => resolve(true); // 无痕模式
-        request.onsuccess = () => {
-          request.result.close();
-          resolve(false); // 不是无痕模式
-        };
-      });
-    }
-
-    // 根据无痕模式加载reCAPTCHA
-    async function loadRecaptcha() {
-      let isIncognitoMode = isIncognito();
-      if (!isIncognitoMode) {
-        isIncognitoMode = await isIncognitoFallback();
-      }
-
-      if (isIncognitoMode) {
-        const script = document.createElement('script');
-        script.src = 'https://www.google.com/recaptcha/api.js';
-        script.async = true;
-        script.defer = true;
-        document.head.appendChild(script);
-      } else {
-        document.getElementById('incognito-only').textContent = '请在无痕模式下访问此页面。';
-      }
-    }
+    let startTime;
+    let timerInterval;
 
     // 启动计时器
     function startTimer() {
@@ -136,11 +93,14 @@
       clearInterval(timerInterval);
     }
 
-    // 页面加载时检测无痕模式并加载reCAPTCHA
-    window.onload = function() {
-      loadRecaptcha();
-      startTimer();
-    };
+    // 加载reCAPTCHA
+    function loadRecaptcha() {
+      const script = document.createElement('script');
+      script.src = 'https://www.google.com/recaptcha/api.js';
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    }
 
     // 表单提交时停止计时器
     function handleSubmit(event) {
@@ -154,16 +114,31 @@
       stopTimer();
       const finalTime = document.getElementById('timer').textContent;
       alert(`恭喜你完成了挑战！用时：${finalTime}`);
+      // 重新导航到该网页
+      window.location.reload();
     }
+
+    // 开始按钮点击事件
+    function handleStart() {
+      loadRecaptcha();
+      startTimer();
+      document.getElementById('start-button').disabled = true;
+    }
+
+    // 页面加载时显示提示
+    window.onload = function() {
+      alert('请使用无痕模式以正常游玩！');
+    };
   </script>
 </head>
 <body>
   <div class="container">
     <div class="timer-container">用时: <span id="timer">00:00.00</span></div>
     <form action="" method="POST" onsubmit="handleSubmit(event)">
-      <div id="incognito-only" class="g-recaptcha" data-sitekey="6LdPSLcrAAAAAJ6BIrdzAsW9bTujQykCkFN8yGcR"></div>
+      <div class="g-recaptcha" data-sitekey="6LdPSLcrAAAAAJ6BIrdzAsW9bTujQykCkFN8yGcR"></div>
       <input type="submit" value="中止计时🛑">
     </form>
+    <input type="button" id="start-button" value="开始挑战🚀" onclick="handleStart()">
   </div>
 </body>
 </html>
