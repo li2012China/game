@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
   <head>
     <title>reCAPTCHA 人机验证速通</title>
@@ -71,21 +72,19 @@
 
       // 启动计时器
       function startTimer() {
-        startTime = new Date().getTime();
-        timerInterval = setInterval(updateTimer, 10);
+        startTime = performance.now();
+        timerInterval = setInterval(updateTimer, 100); // 更新单位改为100毫秒
       }
 
       // 更新计时器显示
       function updateTimer() {
-        const currentTime = new Date().getTime();
+        const currentTime = performance.now();
         const elapsedTime = currentTime - startTime;
-        
-        const hours = Math.floor(elapsedTime / (1000 * 60 * 60));
-        const minutes = Math.floor((elapsedTime % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((elapsedTime % (1000 * 60)) / 1000);
-        const milliseconds = Math.floor((elapsedTime % 1000) / 10);
 
-        const display = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(milliseconds).padStart(3, '0')}`;
+        const seconds = Math.floor(elapsedTime / 1000);
+        const centiseconds = Math.floor((elapsedTime % 1000) / 10); // 显示100毫秒单位
+
+        const display = `${String(seconds).padStart(2, '0')}.${String(centiseconds).padStart(2, '0')}`;
         document.getElementById('timer').textContent = display;
       }
 
@@ -102,6 +101,7 @@
         const recaptchaResponse = grecaptcha.getResponse();
         if (!recaptchaResponse) {
           alert('请先完成reCAPTCHA验证');
+          stopTimer();
           event.preventDefault();
           return;
         }
@@ -113,10 +113,10 @@
   </head>
   <body>
     <div class="container">
-      <div class="timer-container">耗时: <span id="timer">00:00:00.000</span></div>
-      <form action="?" method="POST" onsubmit="handleSubmit(event)">
-        <div class="g-recaptcha" data-sitekey="6LdPSLcrAAAAAJ6BIrdzAsW9bTujQykCkFN8yGcR" data-callback="stopTimer"></div>
-        <input type="submit" value="提交">
+      <div class="timer-container">耗时: <span id="timer">00.00</span></div>
+      <form action="" method="POST" onsubmit="handleSubmit(event)"> <!-- action设置为空 -->
+        <div class="g-recaptcha" data-sitekey="6LdPSLcrAAAAAJ6BIrdzAsW9bTujQykCkFN8yGcR"></div>
+        <input type="submit" value="中止计时🛑">
       </form>
     </div>
   </body>
