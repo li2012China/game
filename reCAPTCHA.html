@@ -1,123 +1,153 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>reCAPTCHA 人机验证速通</title>
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-    <style>
-      body {
-        font-family: 'Arial', sans-serif;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 100vh;
-        margin: 0;
-        background-color: #f5f5f5;
-        color: #333;
+<head>
+  <title>reCAPTCHA v2 仅在无痕模式下加载</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background-color: #f5f5f5;
+      color: #333;
+    }
+    .container {
+      background-color: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      animation: fadeIn 0.5s ease-out;
+    }
+    .timer-container {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      color: #2c3e50;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .g-recaptcha {
+      margin-bottom: 20px;
+    }
+    input[type="submit"] {
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    input[type="submit"]:hover {
+      background-color: #3367d6;
+    }
+    input[type="submit"]:active {
+      transform: scale(0.98);
+    }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
       }
-      .container {
-        background-color: white;
-        padding: 30px;
-        border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        width: 100%;
-        max-width: 400px;
-        text-align: center;
-        animation: fadeIn 0.5s ease-out;
+      to {
+        opacity: 1;
+        transform: translateY(0);
       }
-      .timer-container {
-        font-size: 24px;
-        font-weight: bold;
-        margin-bottom: 20px;
-        color: #2c3e50;
+    }
+  </style>
+  <script>
+    // 检测是否在无痕模式
+    function isIncognito() {
+      try {
+        const test = 'test';
+        localStorage.setItem(test, test);
+        localStorage.removeItem(test);
+        return false; // 不是无痕模式
+      } catch (e) {
+        return e instanceof DOMException && (
+          e.code === 22 ||
+          e.code === 1014 ||
+          e.name === 'QuotaExceededError' ||
+          e.name === 'NS_ERROR_DOM_QUOTA_REACHED') &&
+          localStorage.length === 0;
       }
-      form {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-      }
-      .g-recaptcha {
-        margin-bottom: 20px;
-      }
-      input[type="submit"] {
-        background-color: #4285f4;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 5px;
-        font-size: 16px;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-      }
-      input[type="submit"]:hover {
-        background-color: #3367d6;
-      }
-      input[type="submit"]:active {
-        transform: scale(0.98);
-      }
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-          transform: translateY(-10px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-    </style>
-    <script>
-      let startTime;
-      let timerInterval;
+    }
 
-      // 启动计时器
-      function startTimer() {
-        startTime = performance.now();
-        timerInterval = setInterval(updateTimer, 100); // 更新单位改为100毫秒
+    // 根据无痕模式加载reCAPTCHA
+    function loadRecaptcha() {
+      if (isIncognito()) {
+        const script = document.createElement('script');
+        script.src = 'https://www.google.com/recaptcha/api.js';
+        script.async = true;
+        script.defer = true;
+        document.head.appendChild(script);
+      } else {
+        document.getElementById('incognito-only').textContent = '请在无痕模式下访问此页面。';
       }
+    }
 
-      // 更新计时器显示
-      function updateTimer() {
-        const currentTime = performance.now();
-        const elapsedTime = currentTime - startTime;
+    // 启动计时器
+    function startTimer() {
+      startTime = performance.now();
+      timerInterval = setInterval(updateTimer, 100); // 更新单位为100毫秒
+    }
 
-        const seconds = Math.floor(elapsedTime / 1000);
-        const centiseconds = Math.floor((elapsedTime % 1000) / 10); // 显示100毫秒单位
+    // 更新计时器显示
+    function updateTimer() {
+      const currentTime = performance.now();
+      const elapsedTime = currentTime - startTime;
 
-        const display = `${String(seconds).padStart(2, '0')}.${String(centiseconds).padStart(2, '0')}`;
-        document.getElementById('timer').textContent = display;
-      }
+      const minutes = Math.floor(elapsedTime / (1000 * 60));
+      const seconds = Math.floor((elapsedTime % (1000 * 60)) / 1000);
+      const centiseconds = Math.floor((elapsedTime % 1000) / 10);
 
-      // 停止计时器
-      function stopTimer() {
-        clearInterval(timerInterval);
-      }
+      const display = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(centiseconds).padStart(2, '0')}`;
+      document.getElementById('timer').textContent = display;
+    }
 
-      // 页面加载完成后启动计时器
-      window.onload = startTimer;
+    // 停止计时器
+    function stopTimer() {
+      clearInterval(timerInterval);
+    }
 
-      // 表单提交时停止计时器
-      function handleSubmit(event) {
-        const recaptchaResponse = grecaptcha.getResponse();
-        if (!recaptchaResponse) {
-          alert('请先完成reCAPTCHA验证');
-          stopTimer();
-          event.preventDefault();
-          return;
-        }
+    // 页面加载时检测无痕模式并加载reCAPTCHA
+    window.onload = function() {
+      loadRecaptcha();
+      startTimer();
+    };
+
+    // 表单提交时停止计时器
+    function handleSubmit(event) {
+      const recaptchaResponse = grecaptcha.getResponse();
+      if (!recaptchaResponse) {
+        alert('请先完成reCAPTCHA验证');
         stopTimer();
-        const finalTime = document.getElementById('timer').textContent;
-        alert(`恭喜你完成了挑战！总耗时：${finalTime}`);
+        event.preventDefault();
+        return;
       }
-    </script>
-  </head>
-  <body>
-    <div class="container">
-      <div class="timer-container">耗时: <span id="timer">00.00</span></div>
-      <form action="" method="POST" onsubmit="handleSubmit(event)"> <!-- action设置为空 -->
-        <div class="g-recaptcha" data-sitekey="6LdPSLcrAAAAAJ6BIrdzAsW9bTujQykCkFN8yGcR"></div>
-        <input type="submit" value="中止计时🛑">
-      </form>
-    </div>
-  </body>
+      stopTimer();
+      const finalTime = document.getElementById('timer').textContent;
+      alert(`恭喜你完成了挑战！总耗时：${finalTime}`);
+    }
+  </script>
+</head>
+<body>
+  <div class="container">
+    <div class="timer-container">耗时: <span id="timer">00:00.00</span></div>
+    <form action="" method="POST" onsubmit="handleSubmit(event)">
+      <div id="incognito-only" class="g-recaptcha" data-sitekey="6LdPSLcrAAAAAJ6BIrdzAsW9bTujQykCkFN8yGcR"></div>
+      <input type="submit" value="中止计时🛑">
+    </form>
+  </div>
+</body>
 </html>
