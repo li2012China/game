@@ -1,0 +1,123 @@
+<html>
+  <head>
+    <title>reCAPTCHA 人机验证速通</title>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <style>
+      body {
+        font-family: 'Arial', sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0;
+        background-color: #f5f5f5;
+        color: #333;
+      }
+      .container {
+        background-color: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+        animation: fadeIn 0.5s ease-out;
+      }
+      .timer-container {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 20px;
+        color: #2c3e50;
+      }
+      form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .g-recaptcha {
+        margin-bottom: 20px;
+      }
+      input[type="submit"] {
+        background-color: #4285f4;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+      input[type="submit"]:hover {
+        background-color: #3367d6;
+      }
+      input[type="submit"]:active {
+        transform: scale(0.98);
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+    <script>
+      let startTime;
+      let timerInterval;
+
+      // 启动计时器
+      function startTimer() {
+        startTime = new Date().getTime();
+        timerInterval = setInterval(updateTimer, 10);
+      }
+
+      // 更新计时器显示
+      function updateTimer() {
+        const currentTime = new Date().getTime();
+        const elapsedTime = currentTime - startTime;
+        
+        const hours = Math.floor(elapsedTime / (1000 * 60 * 60));
+        const minutes = Math.floor((elapsedTime % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((elapsedTime % (1000 * 60)) / 1000);
+        const milliseconds = Math.floor((elapsedTime % 1000) / 10);
+
+        const display = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(milliseconds).padStart(3, '0')}`;
+        document.getElementById('timer').textContent = display;
+      }
+
+      // 停止计时器
+      function stopTimer() {
+        clearInterval(timerInterval);
+      }
+
+      // 页面加载完成后启动计时器
+      window.onload = startTimer;
+
+      // 表单提交时停止计时器
+      function handleSubmit(event) {
+        const recaptchaResponse = grecaptcha.getResponse();
+        if (!recaptchaResponse) {
+          alert('请先完成reCAPTCHA验证');
+          event.preventDefault();
+          return;
+        }
+        stopTimer();
+        const finalTime = document.getElementById('timer').textContent;
+        alert(`恭喜你完成了挑战！总耗时：${finalTime}`);
+      }
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="timer-container">耗时: <span id="timer">00:00:00.000</span></div>
+      <form action="?" method="POST" onsubmit="handleSubmit(event)">
+        <div class="g-recaptcha" data-sitekey="6LdPSLcrAAAAAJ6BIrdzAsW9bTujQykCkFN8yGcR"></div>
+        <input type="submit" value="提交">
+      </form>
+    </div>
+  </body>
+</html>
