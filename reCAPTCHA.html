@@ -68,6 +68,7 @@
   <script>
     // 检测是否在无痕模式
     function isIncognito() {
+      // 尝试使用localStorage检测
       try {
         const test = 'test';
         localStorage.setItem(test, test);
@@ -80,9 +81,27 @@
       }
     }
 
+    // 检测是否在无痕模式（备用方法）
+    function isIncognitoFallback() {
+      // 尝试使用IndexedDB检测
+      return new Promise((resolve) => {
+        const request = indexedDB.open('test');
+        request.onerror = () => resolve(true); // 无痕模式
+        request.onsuccess = () => {
+          request.result.close();
+          resolve(false); // 不是无痕模式
+        };
+      });
+    }
+
     // 根据无痕模式加载reCAPTCHA
-    function loadRecaptcha() {
-      if (isIncognito()) {
+    async function loadRecaptcha() {
+      let isIncognitoMode = isIncognito();
+      if (!isIncognitoMode) {
+        isIncognitoMode = await isIncognitoFallback();
+      }
+
+      if (isIncognitoMode) {
         const script = document.createElement('script');
         script.src = 'https://www.google.com/recaptcha/api.js';
         script.async = true;
